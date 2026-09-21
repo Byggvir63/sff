@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXIS — Arda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #14101C;
+    --panel: #1D1830;
+    --panel-raised: #261F3D;
+    --ink: #E8E3F0;
+    --ink-soft: #C3B9DA;
+    --violet: #8C7BC4;
+    --violet-bright: #B3A3E0;
+    --muted: #756A8C;
+    --rule: rgba(140,123,196,0.28);
+    --dim: #453B5C;
+    --axis-red: #c8102e;
+    --font-display: 'Cormorant Garamond', serif;
+    --font-body: 'Work Sans', sans-serif;
+  }
+ 
+  *{ box-sizing: border-box; }
+ 
+  html,body{
+    margin:0;
+    padding:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+ 
+  body{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding: clamp(2.5rem, 6vw, 5rem) clamp(1.25rem, 4vw, 2rem);
+  }
+ 
+  a{ color: inherit; }
+ 
+  .page{ width: 100%; max-width: 760px; }
+ 
+  header.masthead{ text-align:center; margin-bottom: clamp(2rem, 5vw, 3rem); }
+  .kicker{
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin: 0 0 0.6rem;
+  }
+  .kicker a{ text-decoration: none; border-bottom: 1px solid rgba(140,123,196,0.4); }
+  .kicker a:hover{ color: var(--violet-bright); border-bottom-color: var(--violet-bright); }
+ 
+  h1{
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2.4rem, 5.6vw, 3.4rem);
+    margin: 0 0 0.9rem;
+    letter-spacing: 0.02em;
+  }
+ 
+  .lede{
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+    max-width: 52ch;
+    margin: 0 auto;
+    line-height: 1.55;
+  }
+ 
+  .map-callout{
+    margin-top: 2.4rem;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    padding: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+    flex-wrap: wrap;
+  }
+  .map-callout .icon{
+    flex: none;
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: var(--panel-raised);
+    border: 1px solid var(--rule);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--violet-bright);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1.3rem;
+  }
+  .map-callout .txt{ flex: 1; min-width: 200px; }
+  .map-callout h2{
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.3rem;
+    margin: 0 0 0.3rem;
+  }
+  .map-callout p{
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.5;
+  }
+  .map-callout .go{
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--bg);
+    background: var(--violet-bright);
+    padding: 0.6rem 1.1rem;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: background 0.2s ease;
+  }
+  .map-callout .go:hover{ background: var(--ink); }
+ 
+  section.block{
+    margin-top: 2.6rem;
+    padding-top: 1.6rem;
+    border-top: 1px solid var(--rule);
+  }
+  section.block .eyebrow{
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--violet-bright);
+    margin: 0 0 0.6rem;
+  }
+  section.block h2{
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.7rem;
+    margin: 0 0 0.9rem;
+  }
+  section.block p{
+    font-size: 0.98rem;
+    line-height: 1.65;
+    color: var(--ink-soft);
+    margin: 0 0 1rem;
+  }
+  section.block p:last-child{ margin-bottom: 0; }
+ 
+  .facts{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 1.2rem;
+  }
+  .fact{
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    padding: 1rem 1.1rem;
+  }
+  .fact .num{
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--violet-bright);
+    display: block;
+  }
+  .fact .lbl{
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+ 
+  .lines-list{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+  }
+  .lines-list span{
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 12px;
+  }
+ 
+  .districts{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.7rem;
+    margin-top: 0.6rem;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+  }
+  .districts span{ white-space: nowrap; }
+  .districts span::after{ content: "·"; margin-left: 0.7rem; color: var(--dim); }
+  .districts span:last-child::after{ content: ""; }
+ 
+  footer.colophon{
+    margin-top: 3rem;
+    text-align:center;
+    font-size: 0.78rem;
+    color: var(--dim);
+  }
+</style>
+</head>
+<body>
+ 
+<div class="page">
+  <header class="masthead">
+    <p class="kicker"><a href="sff.html">Arda</a> — mondes imaginaires, science-fiction et fantasy</p>
+    <h1>AXIS</h1>
+    <p class="lede">Une planète colonisée, une ligne qui la traverse de part en part, et une mégalopole qui a poussé autour d'elle.</p>
+  </header>
+ 
+  <div class="map-callout">
+    <span class="icon">M</span>
+    <div class="txt">
+      <h2>Meridia — plan interactif</h2>
+      <p>Explorez la ville : quartiers, lignes de transport, stations. Zoomez, cherchez un lieu, cliquez pour en savoir plus.</p>
+    </div>
+    <a class="go" href="meridia.html">Ouvrir la carte →</a>
+  </div>
+ 
+  <section class="block">
+    <p class="eyebrow">Le principe</p>
+    <h2>Une civilisation le long d'un axe</h2>
+    <p>L'humanité a colonisé une planète lointaine en y développant d'abord une seule chose : une ligne ferroviaire à très grande vitesse courant le long de l'équateur. Plutôt que de s'étaler au hasard du terrain, les premières implantations se sont greffées sur cette colonne vertébrale — et s'y sont densifiées au point de fusionner en une mégalopole continue, l'Axe étant devenu autant une infrastructure qu'une adresse, un repère, une identité.</p>
+    <p>Les quartiers portent les noms de toutes les origines qui s'y sont mêlées — Sakura-machi, Nordwald, Santa Lucía, Longcheng, Hanbit-dong — signe d'une colonisation qui n'est venue d'aucune nation en particulier, mais de toutes à la fois.</p>
+  </section>
+ 
+  <section class="block">
+    <p class="eyebrow">L'infrastructure</p>
+    <h2>La ligne AXIS</h2>
+    <p>Le train à subduction : un tunnel rectiligne est-ouest qui ne suit pas le relief mais plonge sous la croûte de la planète pour la traverser en ligne droite. Six gares seulement le long de son passage dans l'agglomération — le reste du trajet se fait sans arrêt, sous terre, à une vitesse que la surface ne pourrait pas suivre.</p>
+    <div class="facts">
+      <div class="fact"><span class="num">480 km</span><span class="lbl">vers l'ouest, Castelmar (24 min)</span></div>
+      <div class="fact"><span class="num">610 km</span><span class="lbl">vers l'est, Tsukishiro (31 min)</span></div>
+      <div class="fact"><span class="num">6</span><span class="lbl">gares dans l'agglomération</span></div>
+    </div>
+  </section>
+ 
+  <section class="block">
+    <p class="eyebrow">La mégalopole</p>
+    <h2>Meridia</h2>
+    <p>Née autour d'Axis Central — la gare-monde, cœur battant de l'agglomération —, Meridia s'est développée en cercles concentriques puis en langues urbaines le long des lignes qui en rayonnent. Le réseau de transport, dense, s'ajoute couche après couche : métro, monorail suspendu dans le quartier néon, tramways de périphérie, bateau-bus sur le fleuve Sorane.</p>
+    <div class="lines-list">
+      <span style="background:#c8102e">AXIS</span>
+      <span style="background:#e53935">M1</span>
+      <span style="background:#1e6fd9">M2</span>
+      <span style="background:#1ea54b">M3</span>
+      <span style="background:#f59e0b">M4</span>
+      <span style="background:#8b5cf6">M5</span>
+      <span style="background:#ff2bd6">NEON</span>
+      <span style="background:#7cb342">T1</span>
+      <span style="background:#00897b">T2</span>
+      <span style="background:#4aa8e6">BATEAU</span>
+    </div>
+    <p style="margin-top:1.1rem;">Quelques quartiers, entre tours de verre, néon et jardins :</p>
+    <div class="districts">
+      <span>Yoru-machi</span><span>Sakura-machi</span><span>Belmont Gardens</span><span>Nordwald</span>
+      <span>Santa Lucía</span><span>Longcheng</span><span>Hanbit-dong</span><span>Hoshikawa</span>
+      <span>Cité des Lilas</span><span>Data-Cathédrale</span>
+    </div>
+  </section>
+ 
+  <footer class="colophon">Une facette de l'Atlas des facettes.</footer>
+</div>
+ 
+</body>
+</html>
