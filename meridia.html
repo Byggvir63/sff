@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Meridia — Plan interactif</title>
+<style>
+:root{
+--ui-bg:#fff;--ui-fg:#202124;--ui-mute:#5f6368;--ui-line:#e3e5e8;--ui-hover:#f1f3f4;--ui-blue:#1a73e8;
+--ui-shadow:0 1px 3px rgba(60,64,67,.3),0 4px 12px rgba(60,64,67,.15);
+--outside:#e2e9d3;--city:#f1eee8;--proche:#eee9dd;--centre:#eae2cf;--zone-line:#a89670;
+--water:#a8d3f3;--water-e:#84bbe6;--park:#c6e3ae;--forest:#b0d495;
+--rd:#ffffff;--rd-case:#cdc7ba;--hw:#fbd680;--hw-case:#dfa543;--tcase:#ffffff;
+--bshade:rgba(150,125,80,.15);--bshade2:rgba(150,125,80,.08);--btall:rgba(90,95,110,.32);--garden:rgba(150,200,110,.55);--roof:rgba(170,120,90,.32);
+--dl:82%;--ll:30%;--halo:rgba(255,255,255,.85);--lbl2:#6b6e73;--kl:#2e7d3f;--wl:#3b7db8;--rw:#9aa0a6;
+--k:1;
+}
+@media (prefers-color-scheme:dark){
+:root:not([data-theme="light"]){
+--ui-bg:#25272b;--ui-fg:#e8eaed;--ui-mute:#9aa0a6;--ui-line:#3a3d42;--ui-hover:#33363b;--ui-blue:#8ab4f8;
+--ui-shadow:0 1px 3px rgba(0,0,0,.6),0 4px 12px rgba(0,0,0,.4);
+--outside:#1a2118;--city:#22262b;--proche:#262a30;--centre:#2b3037;--zone-line:#6b6448;
+--water:#1d3f5c;--water-e:#2a5679;--park:#233a2b;--forest:#1d3324;
+--rd:#4b5058;--rd-case:#15181d;--hw:#8a6f31;--hw-case:#4a3a17;--tcase:#15181d;
+--bshade:rgba(255,255,255,.05);--bshade2:rgba(255,255,255,.03);--btall:rgba(255,255,255,.10);--garden:rgba(90,140,90,.35);--roof:rgba(200,160,130,.20);
+--dl:26%;--ll:72%;--halo:rgba(20,22,26,.85);--lbl2:#9aa0a6;--kl:#8fce9f;--wl:#7fb5e6;--rw:#5b6068;
+}}
+:root[data-theme="dark"]{
+--ui-bg:#25272b;--ui-fg:#e8eaed;--ui-mute:#9aa0a6;--ui-line:#3a3d42;--ui-hover:#33363b;--ui-blue:#8ab4f8;
+--ui-shadow:0 1px 3px rgba(0,0,0,.6),0 4px 12px rgba(0,0,0,.4);
+--outside:#1a2118;--city:#22262b;--proche:#262a30;--centre:#2b3037;--zone-line:#6b6448;
+--water:#1d3f5c;--water-e:#2a5679;--park:#233a2b;--forest:#1d3324;
+--rd:#4b5058;--rd-case:#15181d;--hw:#8a6f31;--hw-case:#4a3a17;--tcase:#15181d;
+--bshade:rgba(255,255,255,.05);--bshade2:rgba(255,255,255,.03);--btall:rgba(255,255,255,.10);--garden:rgba(90,140,90,.35);--roof:rgba(200,160,130,.20);
+--dl:26%;--ll:72%;--halo:rgba(20,22,26,.85);--lbl2:#9aa0a6;--kl:#8fce9f;--wl:#7fb5e6;--rw:#5b6068;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--outside);color:var(--ui-fg);font-family:"Google Sans",Roboto,system-ui,-apple-system,"Segoe UI",sans-serif}
+#app{position:fixed;inset:0;height:100vh;height:100dvh}
+#map{width:100%;height:100%;display:block;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;background:var(--outside)}
+#map.drag{cursor:grabbing}
+.panel{position:absolute;background:var(--ui-bg);border-radius:12px;box-shadow:var(--ui-shadow)}
+button{font:inherit;color:inherit;cursor:pointer}
+/* top panel */
+#top{top:12px;left:12px;width:min(400px,calc(100% - 24px));z-index:6;overflow:visible}
+#brand{display:flex;align-items:center;gap:10px;padding:10px 14px 4px}
+#brand .logo{width:30px;height:30px;border-radius:8px;background:#1a73e8;color:#fff;display:grid;place-items:center;font-weight:700;font-size:17px}
+#brand b{font-size:16px;letter-spacing:.01em}
+#brand small{display:block;color:var(--ui-mute);font-size:11.5px;line-height:1.3}
+#sbox{display:flex;align-items:center;gap:8px;margin:6px 10px 6px;padding:0 10px;height:42px;border:1px solid var(--ui-line);border-radius:22px;background:var(--ui-bg)}
+#sbox:focus-within{border-color:var(--ui-blue);box-shadow:0 0 0 2px color-mix(in srgb,var(--ui-blue) 25%,transparent)}
+#sbox svg{flex:none;color:var(--ui-mute)}
+#q{flex:1;min-width:0;border:0;outline:0;background:transparent;color:inherit;font:inherit;font-size:14.5px}
+#qx{border:0;background:transparent;color:var(--ui-mute);font-size:20px;line-height:1;padding:4px}
+#layers{display:flex;gap:6px;padding:0 10px 10px;overflow-x:auto;scrollbar-width:none}
+.lyr{flex:none;border:1px solid var(--ui-line);background:var(--ui-bg);border-radius:16px;padding:5px 11px;font-size:12.5px;color:var(--ui-mute)}
+.lyr.on{background:color-mix(in srgb,var(--ui-blue) 14%,var(--ui-bg));border-color:color-mix(in srgb,var(--ui-blue) 45%,transparent);color:var(--ui-blue);font-weight:600}
+#res{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--ui-bg);border-radius:12px;box-shadow:var(--ui-shadow);max-height:min(58vh,440px);overflow:auto;padding:6px}
+#res h4{margin:8px 10px 4px;font-size:12px;font-weight:600;color:var(--ui-mute)}
+.res{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:transparent;padding:7px 8px;border-radius:8px}
+.res:hover,.res:focus-visible{background:var(--ui-hover);outline:0}
+.ri{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:15px;color:#fff}
+.res b{display:block;font-size:13.5px;font-weight:600}
+.res small{display:block;color:var(--ui-mute);font-size:12px}
+/* controls */
+#ctrl{position:absolute;right:12px;bottom:26px;display:flex;flex-direction:column;gap:8px;z-index:5}
+.cb{width:42px;height:42px;border:0;border-radius:10px;background:var(--ui-bg);box-shadow:var(--ui-shadow);font-size:20px;display:grid;place-items:center}
+.cb:hover{background:var(--ui-hover)}
+.cb.txt{font-size:11px;font-weight:600;line-height:1.1;text-align:center}
+#lines{right:64px;bottom:26px;width:min(270px,calc(100% - 90px));padding:12px;z-index:5;max-height:60vh;overflow:auto}
+#lines h3{margin:0 0 8px;font-size:13px}
+#lines .lp{display:flex;align-items:center;gap:8px;width:100%;border:0;background:transparent;text-align:left;padding:5px 4px;border-radius:8px;font-size:12.5px}
+#lines .lp:hover{background:var(--ui-hover)}
+.chipl{flex:none;min-width:38px;text-align:center;color:#fff;font-weight:700;font-size:12px;border-radius:12px;padding:2px 8px}
+#lines p{margin:8px 4px 0;font-size:11.5px;color:var(--ui-mute);line-height:1.4}
+#sb{position:absolute;right:66px;bottom:8px;z-index:4;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ui-fg);background:color-mix(in srgb,var(--ui-bg) 82%,transparent);padding:2px 8px;border-radius:6px}
+#sbBar{height:6px;border:2px solid var(--ui-fg);border-top:0}
+/* card */
+#card{left:12px;bottom:12px;width:min(400px,calc(100% - 24px));max-height:46vh;overflow:auto;z-index:6;padding:16px}
+#cardX{position:absolute;right:10px;top:8px;border:0;background:transparent;font-size:22px;color:var(--ui-mute);line-height:1}
+.ch{display:flex;gap:12px;align-items:center;padding-right:22px}
+#cIc{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:22px;color:#fff}
+#cName{margin:0;font-size:18px;line-height:1.2;font-weight:600}
+#cNat{color:var(--ui-mute);font-size:13px;margin-top:2px}
+#cChips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
+.chip{border:1px solid var(--ui-line);border-radius:12px;padding:2px 9px;font-size:12px;color:var(--ui-mute)}
+#cDesc{margin:8px 0 0;font-size:13.5px;line-height:1.5}
+#cExtra{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+.pill{border:0;border-radius:14px;color:#fff;font-weight:700;font-size:12px;padding:4px 11px}
+.sbtn{border:1px solid var(--ui-line);background:var(--ui-bg);border-radius:14px;font-size:12px;padding:4px 10px}
+.sbtn:hover{background:var(--ui-hover)}
+@media(max-width:700px){
+#card{left:0;right:0;bottom:0;width:auto;border-radius:16px 16px 0 0;max-height:40vh}
+#ctrl{top:150px;bottom:auto}
+#lines{top:150px;bottom:auto;right:62px}
+#sb{right:auto;left:10px;bottom:auto;top:auto;display:none}
+}
+/* map styling */
+.t{font-family:"Google Sans",Roboto,system-ui,sans-serif;font-size:calc(var(--fs,11px)*var(--k));fill:var(--lbl2);paint-order:stroke;stroke:var(--halo);stroke-width:calc(3px*var(--k));stroke-linejoin:round;pointer-events:none;text-anchor:middle}
+.lv2,.lv3,.pat{display:none}
+svg[data-level="2"] .lv2,svg[data-level="3"] .lv2,svg[data-level="3"] .lv3{display:inline}
+svg[data-level="2"] .pat,svg[data-level="3"] .pat{display:inline}
+svg:not([data-level="1"]) .only1{display:none}
+.zone{fill:var(--proche);stroke:none}
+.zl{fill:none;stroke:var(--zone-line);stroke-width:calc(1.5px*var(--k));stroke-dasharray:calc(9px*var(--k)) calc(6px*var(--k));pointer-events:none}
+.zt{--fs:26px;fill:var(--zone-line);opacity:.55;letter-spacing:.35em;font-weight:700;stroke:none}
+.df{fill:hsl(var(--h) var(--s) var(--dl)/.62);stroke:hsl(var(--h) 25% 55%/.55);stroke-width:calc(1.2px*var(--k));cursor:pointer}
+.df.cyb{fill:#170b36;stroke:#ff2bd6;stroke-opacity:.8}
+.df.sel,.pk.sel{stroke:#1a73e8;stroke-width:calc(3px*var(--k));stroke-opacity:1}
+.pk{fill:var(--park);stroke:none;cursor:pointer}
+.pk.forest{fill:var(--forest)}
+.dl{fill:hsl(var(--h) 45% var(--ll));letter-spacing:.09em;font-weight:700}
+.dl.nat{font-weight:500;letter-spacing:.03em;transform:translateY(calc(13px*var(--k)));--fs:10.5px}
+.dl.cy{fill:#ff7ae9;stroke:#12082b}
+.kl{fill:var(--kl);font-style:italic;--fs:11px}
+.wl{fill:var(--wl);font-style:italic;letter-spacing:.14em;--fs:12px}
+.rl{fill:var(--lbl2);--fs:10px;letter-spacing:.04em}
+.rc,.rf{fill:none;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.rc.hwy{stroke:var(--hw-case);stroke-width:18}.rf.hwy{stroke:var(--hw);stroke-width:13}
+.rc.art2{stroke:var(--rd-case);stroke-width:17}.rf.art2{stroke:var(--rd);stroke-width:12}
+.rc.art{stroke:var(--rd-case);stroke-width:11}.rf.art{stroke:var(--rd);stroke-width:8}
+.rc.ave{stroke:var(--rd-case);stroke-width:8}.rf.ave{stroke:var(--rd);stroke-width:5.5}
+.rc.neon{stroke:#3a0f57;stroke-width:9}.rf.neon{stroke:#ff4fd8;stroke-width:4.5}
+.rc.neon2{display:none}.rf.neon2{stroke:#00e5ff;stroke-width:2.6;opacity:.75}
+.rw{stroke:var(--rw);stroke-width:10;stroke-linecap:butt;fill:none}
+.term{fill:var(--rw)}
+.stad{fill:var(--park);stroke:var(--rw);stroke-width:3}
+.tw{fill:var(--btall);stroke:none}.twS{fill:rgba(0,0,0,.18)}
+.cw{fill:#241552;stroke-width:1.6}.cwS{fill:#0d0622}
+.lake{fill:var(--water);stroke:var(--water-e);stroke-width:calc(1.5px*var(--k));cursor:pointer}
+.isl{cursor:pointer}
+.wt{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.wte{stroke:var(--water-e)}.wtf{stroke:var(--water)}
+.bs{fill:var(--bshade)}.bs2{fill:var(--bshade2)}.bc{fill:var(--rd);opacity:.5}.bt{fill:var(--btall)}.gs{fill:var(--garden)}.hs{fill:var(--roof)}.pool{fill:var(--water)}.ps{stroke:var(--rd);fill:none}
+.fa{fill:rgba(140,170,90,.13)}.fb{fill:rgba(200,205,110,.16)}
+/* transit */
+#gTransit{--lw:calc(2.6px*var(--k) + 1.2px)}
+.tc,.tl{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.tc{stroke:var(--tcase);stroke-width:calc(var(--lw) + 3px*var(--k));pointer-events:none}
+.tl{stroke-width:var(--lw);pointer-events:stroke;cursor:pointer}
+.tc.axis,.tl.axis{stroke-dasharray:calc(13px*var(--k)) calc(5px*var(--k));stroke-linecap:butt}
+.tl.axis{stroke-width:calc(var(--lw)*1.55)}.tc.axis{stroke-width:calc(var(--lw)*1.55 + 3px*var(--k))}
+.tc.tram,.tl.tram{stroke-dasharray:calc(7px*var(--k)) calc(3px*var(--k));stroke-linecap:butt}
+.tc.boat{display:none}
+.tl.boat{stroke:#5fb4ea;stroke-dasharray:calc(1px*var(--k)) calc(6px*var(--k));stroke-width:calc(var(--lw)*1.5)}
+.tl.neon{filter:drop-shadow(0 0 calc(3px*var(--k)) #ff2bd6)}
+.sc{fill:var(--ui-bg);stroke-width:2.4}
+.sc.ix{stroke:#222!important;stroke-width:2.6;fill:#fff}
+.axs{fill:#fff;stroke:#c8102e;stroke-width:3}
+.axc{fill:#c8102e;stroke:#fff;stroke-width:2.5}
+.sl{--fs:10.5px;text-anchor:start;transform:translate(calc(9px*var(--k)),calc(3.5px*var(--k)))}
+.sl.b{font-weight:700;fill:var(--ui-fg)}
+.sl.l{text-anchor:end;transform:translate(calc(-9px*var(--k)),calc(3.5px*var(--k)))}
+.st{cursor:pointer}
+svg.focus [data-lines]{opacity:.13}
+svg.focus [data-lines].on{opacity:1}
+.mk{transform:scale(var(--k))}
+.em{font-size:12px;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.poi{cursor:pointer}
+.poi circle{stroke:#fff;stroke-width:2}
+.pl{--fs:11.5px;font-weight:600;fill:var(--ui-fg);text-anchor:start;transform:translate(calc(14px*var(--k)),calc(4px*var(--k)))}
+.ax-lbl{--fs:12px;fill:#c8102e;font-weight:700;stroke:var(--halo)}
+.pulse{fill:none;stroke:#1a73e8;stroke-width:calc(3px*var(--k));animation:pu 1.2s ease-out 2;pointer-events:none}
+@keyframes pu{from{r:calc(6px*var(--k));opacity:.95}to{r:calc(44px*var(--k));opacity:0}}
+#app.off-transit #gTransit{display:none}
+#app.off-poi #gPoi{display:none}
+#app.off-dist #gDist,#app.off-dist #lblDist{display:none}
+#app.off-zone #gZone,#app.off-zone #lblZone{display:none}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none;r:calc(20px*var(--k))}}
+</style>
+</head>
+<body>
+<div id="app">
+<svg id="map" xmlns="http://www.w3.org/2000/svg" data-level="2" role="img" aria-label="Plan interactif de la ville fictive de Meridia">
+<defs id="defs"></defs>
+<g id="gBase"></g><g id="gDist"></g><g id="gPark"></g><g id="gZone"></g><g id="gWater"></g><g id="gRoad"></g><g id="gBld"></g><g id="gTransit"></g>
+<g id="lblZone"></g><g id="lblDist"></g><g id="lblPark"></g><g id="lblWater"></g><g id="lblRoad"></g><g id="gPoi"></g><g id="gFx"></g>
+</svg>
+ 
+<div id="top" class="panel">
+  <div id="brand"><div class="logo">M</div><div><b>Meridia</b><small>Mégalopole fictive · 14,6 M d'habitants · 2 880 km²</small></div></div>
+  <div id="sbox">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+    <input id="q" type="search" placeholder="Lieu, quartier, station…" autocomplete="off" aria-label="Rechercher">
+    <button id="qx" hidden aria-label="Effacer">×</button>
+  </div>
+  <div id="layers">
+    <button class="lyr on" data-l="transit">Transports</button>
+    <button class="lyr on" data-l="poi">Lieux</button>
+    <button class="lyr on" data-l="dist">Quartiers</button>
+    <button class="lyr on" data-l="zone">Zones</button>
+  </div>
+  <div id="res" hidden></div>
+</div>
+ 
+<div id="ctrl">
+  <button class="cb txt" id="bLines" aria-label="Lignes de transport">Lignes</button>
+  <button class="cb txt" id="bAll" aria-label="Vue d'ensemble">Vue<br>globale</button>
+  <button class="cb" id="bIn" aria-label="Zoom avant">+</button>
+  <button class="cb" id="bOut" aria-label="Zoom arrière">−</button>
+</div>
+<div id="lines" class="panel" hidden></div>
+<div id="sb"><div id="sbBar"></div><span id="sbTxt"></span></div>
+ 
+<div id="card" class="panel" hidden>
+  <button id="cardX" aria-label="Fermer">×</button>
+  <div class="ch"><div id="cIc"></div><div><h2 id="cName"></h2><div id="cNat"></div></div></div>
+  <div id="cChips"></div>
+  <p id="cDesc"></p>
+  <div id="cExtra"></div>
+</div>
+</div>
+ 
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const P=a=>a.map(p=>p[0]+","+p[1]).join(" ");
+const L=a=>"M"+a.map(p=>p[0]+" "+p[1]).join("L");
+const f1=n=>Math.round(n*10)/10;
+function smooth(p,closed){
+  const n=p.length;let d="M"+p[0][0]+" "+p[0][1];const cnt=closed?n:n-1;
+  for(let i=0;i<cnt;i++){
+    const p0=closed?p[(i-1+n)%n]:p[Math.max(i-1,0)],p1=p[i],p2=p[(i+1)%n],p3=closed?p[(i+2)%n]:p[Math.min(i+2,n-1)];
+    d+="C"+f1(p1[0]+(p2[0]-p0[0])/6)+" "+f1(p1[1]+(p2[1]-p0[1])/6)+" "+f1(p2[0]-(p3[0]-p1[0])/6)+" "+f1(p2[1]-(p3[1]-p1[1])/6)+" "+p2[0]+" "+p2[1];
+  }
+  return closed?d+"Z":d;
+}
+const ell=e=>{const[cx,cy,rx,ry]=e;return `M${cx-rx} ${cy}A${rx} ${ry} 0 1 1 ${cx+rx} ${cy}A${rx} ${ry} 0 1 1 ${cx-rx} ${cy}Z`};
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function inPoly(x,y,p){let c=false;for(let i=0,j=p.length-1;i<p.length;j=i++){if(((p[i][1]>y)!=(p[j][1]>y))&&(x<(p[j][0]-p[i][0])*(y-p[i][1])/(p[j][1]-p[i][1])+p[i][0]))c=!c}return c}
+const cent=p=>[p.reduce((a,q)=>a+q[0],0)/p.length,p.reduce((a,q)=>a+q[1],0)/p.length];
+const bbox=p=>{const xs=p.map(q=>q[0]),ys=p.map(q=>q[1]);return[Math.min(...xs),Math.min(...ys),Math.max(...xs),Math.max(...ys)]};
+const norm=s=>String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+ 
+/* ---------- Géographie ---------- */
+const ZN=[[2000,1200,700,500,"Centre-ville"],[2000,1200,1300,850,"Proche banlieue"],[2000,1200,1950,1180,"Banlieue"]];
+const zoneOf=(x,y)=>{for(const z of ZN){if(((x-z[0])/z[2])**2+((y-z[1])/z[3])**2<=1)return z[4]}return "Campagne périphérique"};
+const RIVER=[[2570,-40],[2490,180],[2385,380],[2310,560],[2330,760],[2275,960],[2215,1120],[2255,1290],[2330,1440],[2270,1620],[2200,1780],[2140,1940],[2165,2100],[2250,2250],[2310,2450]];
+const LAKE=[[3230,520],[3300,455],[3420,440],[3540,480],[3575,560],[3480,622],[3350,600],[3265,590]];
+ 
+/* Motifs de rues / bâti */
+const PB={
+pHauss:[70,70,`<rect x="6" y="6" width="58" height="58" rx="2" class="bs"/><rect x="22" y="22" width="26" height="26" class="bc"/><path d="M0 0H70M0 0V70" class="ps" style="stroke-width:5"/>`],
+pHist:[90,90,`<rect width="90" height="90" class="bs"/><path d="M0 30L40 24L90 30M0 66L50 72L90 66M28 0L34 45L28 90M64 0L58 45L64 90" class="ps" style="stroke-width:3.4"/>`],
+pUniv:[100,80,`<rect x="6" y="6" width="38" height="30" class="bs"/><rect x="52" y="6" width="42" height="30" class="bs"/><rect x="6" y="46" width="88" height="28" class="gs"/><rect x="14" y="52" width="72" height="16" class="bs"/><path d="M0 0H100M0 40H100M0 0V80M48 0V40" class="ps" style="stroke-width:3.6"/>`],
+pBiz:[120,120,`<rect x="8" y="8" width="104" height="104" class="bs"/><rect x="18" y="18" width="34" height="34" class="bt"/><rect x="66" y="62" width="30" height="36" class="bt"/><path d="M0 0H120M0 0V120" class="ps" style="stroke-width:8"/>`],
+pLux:[150,120,`<rect x="4" y="4" width="142" height="112" class="gs"/><rect x="30" y="28" width="38" height="24" rx="2" class="hs"/><rect x="92" y="70" width="34" height="22" rx="2" class="hs"/><rect x="100" y="36" width="14" height="9" rx="4" class="pool"/><path d="M0 0H150M0 0V120" class="ps" style="stroke-width:4"/>`],
+pRes:[84,56,`<rect x="4" y="4" width="76" height="48" class="bs"/><rect x="9" y="8" width="16" height="11" class="hs"/><rect x="31" y="8" width="16" height="11" class="hs"/><rect x="53" y="8" width="16" height="11" class="hs"/><rect x="9" y="30" width="16" height="11" class="hs"/><rect x="31" y="30" width="16" height="11" class="hs"/><rect x="53" y="30" width="16" height="11" class="hs"/><path d="M0 0H84M0 0V56" class="ps" style="stroke-width:3.6"/>`],
+pResNew:[110,110,`<rect x="8" y="8" width="94" height="94" rx="10" class="gs"/><circle cx="34" cy="34" r="12" class="hs"/><circle cx="76" cy="34" r="12" class="hs"/><circle cx="34" cy="76" r="12" class="hs"/><rect x="62" y="64" width="26" height="24" rx="4" class="bs"/><path d="M0 0H110M0 0V110" class="ps" style="stroke-width:4.5"/>`],
+pPost:[130,90,`<rect width="130" height="90" class="bs2"/><rect x="10" y="10" width="110" height="14" class="bt"/><rect x="10" y="38" width="110" height="14" class="bt"/><rect x="10" y="66" width="60" height="14" class="bt"/><path d="M0 0H130M0 0V90" class="ps" style="stroke-width:4"/>`],
+pInd:[160,120,`<rect x="8" y="8" width="144" height="50" class="bs"/><rect x="8" y="66" width="90" height="46" class="bs"/><rect x="106" y="66" width="46" height="46" class="bt"/><path d="M0 0H160M0 0V120" class="ps" style="stroke-width:6"/>`],
+pTerrace:[60,44,`<rect x="3" y="3" width="54" height="16" class="hs"/><rect x="3" y="25" width="54" height="16" class="hs"/><path d="M0 0H60M0 22H60M0 0V44" class="ps" style="stroke-width:2.6"/><path d="M15 3V19M27 3V19M39 3V19M15 25V41M27 25V41M39 25V41" class="ps" style="stroke-width:1"/>`],
+pCyber:[64,64,`<rect width="64" height="64" fill="#160b34"/><rect x="4" y="4" width="56" height="56" fill="#2a1a5e" opacity=".85"/><path d="M0 0H64M0 0V64" stroke="#00e5ff" stroke-width="1.6" opacity=".55"/><rect x="10" y="10" width="8" height="5" fill="#ff2bd6" opacity=".9"/><rect x="38" y="38" width="12" height="4" fill="#00e5ff" opacity=".9"/><rect x="36" y="12" width="14" height="3" fill="#ffd400" opacity=".8"/><path d="M0 32H24M40 64V50" stroke="#ff2bd6" stroke-width="1.2" opacity=".6"/>`],
+pField:[240,170,`<rect width="240" height="170" class="fa"/><rect width="120" height="90" class="fb"/><rect x="120" y="90" width="120" height="80" class="fb"/><path d="M0 90H240M120 0V170" class="ps" style="stroke-width:2;opacity:.6"/>`]
+};
+const usedPat={};
+function patId(name,rot){rot=rot||0;const id=name+(rot?"_"+(rot<0?"n":"")+Math.abs(rot):"");if(!usedPat[id]){const b=PB[name];usedPat[id]=`<pattern id="${id}" width="${b[0]}" height="${b[1]}" patternUnits="userSpaceOnUse"${rot?` patternTransform="rotate(${rot})"`:""}>${b[2]}</pattern>`}return id}
+ 
+/* ---------- Quartiers ---------- */
+const TY={
+hauss:{h:38,s:45,p:"pHauss",cat:"Quartier historique",ic:"🏛️"},hist:{h:25,s:45,p:"pHist",cat:"Quartier historique",ic:"🏛️"},
+univ:{h:225,s:40,p:"pUniv",cat:"Quartier étudiant",ic:"🎓"},biz:{h:210,s:20,p:"pBiz",cat:"Quartier d'affaires",ic:"🏢"},
+tech:{h:175,s:35,p:"pBiz",cat:"Recherche & innovation",ic:"🔬"},lux:{h:105,s:38,p:"pLux",cat:"Résidentiel de luxe",ic:"🏡"},
+res:{h:40,s:28,p:"pRes",cat:"Quartier résidentiel",ic:"🏘️"},resnew:{h:135,s:40,p:"pResNew",cat:"Nouveau quartier",ic:"🌱"},
+post:{h:30,s:12,p:"pPost",cat:"Grand ensemble (années 1960)",ic:"🏘️"},ind:{h:215,s:8,p:"pInd",cat:"Zone portuaire & industrielle",ic:"🏭"},
+cyber:{p:"pCyber",cat:"Quartier cyberpunk",ic:"🌃"},airp:{h:210,s:6,p:null,cat:"Aéroport",ic:"✈️"},cult:{cat:"Quartier culturel",ic:"🎎"}
+};
+const D=[];
+const addD=(id,n,nat,t,poly,lb,lv,d,o)=>D.push({id,n,nat,t,poly,lb,lv,d,o:o||{}});
+addD("grands-boulevards","Les Grands Boulevards","Vieille Cité haussmannienne","hauss",[[1650,800],[2000,765],[2200,800],[2245,880],[2235,960],[2175,1120],[2160,1182],[1650,1182]],[1930,1142],1,"Le cœur historique : immeubles en pierre blonde à toits de zinc, huit avenues en étoile autour de la Place de la Fondation, opéra, grands cafés et musées. Reconstruit au XIXᵉ siècle autour de la première gare.");
+addD("vieux-sorane","Vieux-Sorane","Les Halles et le marché","hist",[[2310,1040],[2620,1050],[2620,1183],[2290,1183]],[2455,1170],2,"Ruelles médiévales tortueuses sur la rive droite : halles couvertes, brasseries, ateliers d'artisans et galeries d'art contemporain.");
+addD("universitas","Universitas","Quartier étudiant","univ",[[1650,1222],[2185,1222],[2225,1330],[2280,1450],[2200,1580],[1800,1612],[1650,1520]],[1790,1575],1,"Campus historique, bibliothèques, librairies et bars étudiants à deux pas de la gare centrale. Environ 90 000 étudiants y vivent ou y étudient.");
+addD("sakura-machi","Sakura-machi","桜町 · Quartier japonais","cult",[[1420,870],[1650,800],[1650,1005],[1330,1005]],[1480,985],2,"Ruelles bordées de cerisiers, izakayas, temple et boutiques de papeterie. Festival des cerisiers chaque printemps.",{h:345,s:55,p:"pRes",cat:"Quartier japonais"});
+addD("borgo-nuovo","Borgo Nuovo","Quartier italien","cult",[[1330,1010],[1650,1010],[1650,1182],[1305,1182]],[1470,1172],2,"Piazzas, trattorias, basilique et marché du samedi. Les façades ocre et les balcons fleuris imitent un bourg de la péninsule.",{h:20,s:60,p:"pHist",rot:-10,cat:"Quartier italien"});
+addD("esperanza","Barrio Esperanza","Quartier latino","cult",[[1305,1222],[1650,1222],[1650,1420],[1350,1420]],[1470,1395],2,"Façades colorées, plazas animées, musique live et cuisines d'Amérique latine et d'Espagne.",{h:45,s:75,p:"pHauss",rot:8,cat:"Quartier latino"});
+addD("al-nour","Médina Al-Nour","المدينة النور · Quartier arabe","cult",[[1350,1425],[1650,1425],[1650,1530],[1760,1610],[1700,1650],[1420,1620]],[1520,1590],2,"Souk couvert, grande mosquée et hammams. Un labyrinthe de ruelles voûtées, de riads et d'ateliers de lanternes.",{h:165,s:35,p:"pHist",rot:25,cat:"Quartier arabe"});
+addD("longcheng","Longcheng","龍城 · Quartier chinois","cult",[[1770,1625],[2130,1615],[2110,1790],[1790,1800]],[1950,1782],2,"Porte monumentale, temple du dragon, marchés nocturnes et maisons de thé ; le plus grand quartier chinois de la mégalopole.",{h:2,s:60,p:"pHist",cat:"Quartier chinois"});
+addD("albion","Albion Row","Quartier anglais","cult",[[1700,590],[2210,570],[2255,690],[2210,770],[1700,795]],[1790,650],2,"Rangées de maisons en brique, pubs, marché couvert et petits théâtres. Ambiance londonienne sous les réverbères.",{h:265,s:30,p:"pTerrace",cat:"Quartier anglais"});
+addD("belmont","Belmont Gardens","Les jardins de Belmont","lux",[[2385,735],[2760,800],[2760,1030],[2310,1015]],[2470,1000],1,"Le quartier résidentiel de prestige : villas aux vastes jardins, avenues de tilleuls, ambassades et jardin botanique, à quelques minutes du centre.");
+addD("yoru-machi","Yoru-machi","夜町 · Neon Sprawl","cyber",[[2385,1235],[2800,1235],[2800,1580],[2520,1695],[2375,1565]],[2590,1268],1,"Le district cyberpunk : mégatours saturées d'enseignes, monorail suspendu, marchés noirs, cliniques d'implants et arcades. Il ne dort jamais et il pleut souvent (sur les enseignes, du moins).",{cat:"Quartier cyberpunk"});
+addD("hanamizuki","Hanamizuki-dai","花水木台","res",[[1000,560],[1400,540],[1430,790],[1360,900],[1060,900]],[1200,660],2,"Lotissement paisible de maisons individuelles, jardinets et petits sanctuaires de quartier, desservi par le métro circulaire.");
+addD("saint-eloi","Saint-Éloi","","res",[[1440,420],[1780,400],[1790,590],[1470,610]],[1610,500],3,"Faubourg bourgeois de la fin du XIXᵉ siècle : maisons de maître, marchés et écoles.");
+addD("marronniers","Les Marronniers","","res",[[2080,420],[2290,410],[2290,560],[2080,560]],[2185,490],3,"Quartier calme de petits immeubles et de jardins partagés, bordé par le fleuve au nord.");
+addD("hanbit","Hanbit-dong","한빛동 · Quartier coréen","cult",[[2800,790],[3090,770],[3130,1000],[2830,1030]],[2960,850],2,"Restaurants de barbecue, salons de thé, marchés couverts et boutiques de cosmétiques. Les néons y sont chaleureux, pas cyberpunk.",{h:195,s:50,p:"pRes",cat:"Quartier coréen"});
+addD("horizon","Horizon","Quartier d'affaires","biz",[[2830,1035],[3230,1035],[3230,1365],[2830,1365]],[3030,1348],1,"Le quartier d'affaires : tours de verre, Bourse, sièges de multinationales, centre de congrès. Il est construit le long de l'esplanade de l'Axe et fermé par l'Arche de l'Horizon.");
+addD("eastwood","Eastwood","","res",[[2860,1420],[3200,1400],[3230,1640],[2900,1640]],[3040,1520],3,"Lotissements de maisons mitoyennes et pavillons, écoles et petits commerces.");
+addD("tanneurs","Faubourg des Tanneurs","Anciennes tanneries","ind",[[1350,1700],[1720,1655],[1750,1900],[1400,1900]],[1550,1880],2,"Anciennes tanneries reconverties en lofts, ateliers d'artistes et brasseries artisanales, avec un petit musée sur le cuir.",{h:20,s:30});
+addD("erasme","Campus Erasme","","univ",[[900,1450],[1280,1450],[1300,1700],[920,1720]],[1090,1690],2,"Deuxième pôle universitaire de Meridia : écoles d'ingénieurs, résidences étudiantes et laboratoires.");
+addD("technopole","Technopôle Curie-Hokusai","Recherche & innovation","tech",[[950,1030],[1280,1030],[1280,1370],[950,1370]],[1115,1350],1,"Le cluster de recherche : instituts, incubateurs, laboratoires de géophysique (on y étudie la subduction de l'Axe) et start-up. Desservi par la gare Technopôle.");
+addD("docks","Docks du Sorane","Port fluvial","ind",[[1900,1830],[2115,1830],[2110,2050],[1900,2050]],[2005,2032],2,"Bassins, entrepôts et grues du port fluvial. Le musée maritime occupe une ancienne criée.");
+addD("skandia","Skandia Wharf","Quartier nordique","cult",[[2280,1720],[2600,1700],[2650,1880],[2330,1960]],[2470,1922],2,"Quais rénovés avec maisons à colombages colorées, saunas publics, boulangeries nordiques et pavillon de design scandinave.",{h:195,s:45,p:"pTerrace",cat:"Quartier nordique"});
+addD("aube-verte","Aube Verte","Éco-quartier","resnew",[[2400,1990],[2800,1980],[2820,2250],[2420,2260]],[2610,2240],2,"Éco-quartier récent aux toits végétalisés, bâtiments à énergie positive, jardins-forêts et pistes cyclables, achevé il y a dix ans.");
+addD("nordwald","Nordwald","","res",[[1400,100],[2200,90],[2230,330],[1450,340]],[1800,250],2,"Banlieue verte du nord, dans le style d'une petite ville allemande : maisons à pignons, marché et lisières boisées.");
+addD("lilas","Cité des Lilas","","post",[[2650,140],[3000,120],[3050,360],[2700,390]],[2830,320],2,"Grand ensemble des années 1960 : barres et tours entourées de pelouses, aujourd'hui rénové et desservi par le tram et le métro.");
+addD("hoshikawa","Hoshikawa Lakeside","星川湖畔","res",[[3120,690],[3580,690],[3580,880],[3180,880]],[3350,790],2,"Résidences aux abords du lac Hoshikawa, ponton de pêche, sentiers et villas de week-end.");
+addD("pinewood","Pinewood Gardens","","res",[[400,300],[900,280],[950,650],[450,700]],[650,600],3,"Lotissement à l'anglaise de maisons individuelles et de golfs de proximité, au nord-ouest.");
+addD("montclair","Montclair","","res",[[550,860],[900,850],[900,1060],[560,1080]],[730,1040],2,"Village devenu banlieue à la lisière de la forêt, avec son château, sa place du marché et son hippodrome voisin.");
+addD("occident","Porte d'Occident","Terminus ouest de l'Axe","biz",[[150,1150],[450,1150],[450,1330],[150,1330]],[300,1310],2,"Pôle de transport et de logistique bâti autour du terminus ouest de l'Axe : hôtels, centre de fret et parkings-relais.");
+addD("santa-lucia","Santa Lucía","","res",[[400,1550],[900,1520],[950,1850],[450,1900]],[650,1720],2,"Banlieue sud-ouest de maisons basses aux patios fleuris, terminus de la ligne M4.",{h:45,s:40});
+addD("kogyo","Zone Industrielle Kōgyō","工業","ind",[[1100,1950],[1700,1930],[1720,2150],[1120,2170]],[1400,2100],2,"Usines, entrepôts et centrales de logistique du sud. Le tram T2 amène les travailleurs.");
+addD("neustadt","Neustadt","","post",[[1650,2180],[2000,2170],[2050,2380],[1700,2390]],[1830,2330],3,"Ville nouvelle des années 1960 à plan géométrique : places, barres, écoles et centre commercial.");
+addD("val-solaire","Val Solaire","","resnew",[[3150,1620],[3550,1600],[3600,1850],[3200,1860]],[3390,1720],3,"Quartier récent aux panneaux solaires et aux toitures en pente, entre le stade et l'aéroport.");
+addD("aeroport","Aéroport MZR","Meridia-Zéphyr","airp",[[3350,1930],[3800,1900],[3900,2150],[3400,2200]],[3620,2180],2,"Aéroport international à deux pistes parallèles, relié à l'Axe Central par la ligne M3.");
+addD("higashimura","Higashimura","東村","res",[[3400,900],[3600,900],[3600,1100],[3400,1100]],[3500,1000],3,"Village d'origine agricole devenu banlieue, avec ses rizières résiduelles et son petit temple.");
+addD("orient","Porte d'Orient","Terminus est de l'Axe","biz",[[3550,1120],[3900,1120],[3900,1290],[3550,1290]],[3720,1275],2,"Pôle de transport du terminus est de l'Axe (vers Tsukishiro) : hôtels, halls d'échange et centres de fret.");
+ 
+/* ---------- Parcs ---------- */
+const PARKS=[
+["aurore","Parc de l'Aurore","","park",[[2045,1248],[2175,1245],[2205,1330],[2150,1395],[2060,1380]],[2105,1268],2,"Le grand parc du centre-ville, à côté de la gare : pelouses, kiosque, muséum et bassin."],
+["belmont-bota","Jardin botanique de Belmont","","park",[[2520,830],[2690,840],[2720,960],[2560,985]],[2620,935],3,"Serres victoriennes, roseraie et collection d'orchidées ; ouvert toute l'année."],
+["montclair","Forêt de Montclair","","forest",[[120,760],[480,700],[520,1000],[420,1140],[130,1120]],[300,930],2,"Vaste forêt à l'ouest, sentiers, étangs et pistes cyclables."],
+["bois-est","Bois de l'Est","東の森 · Higashi-no-mori","forest",[[3620,520],[3900,480],[3950,900],[3640,930]],[3790,720],2,"Forêt orientale de cèdres et d'érables, appréciée pour ses randonnées et ses foires d'automne."],
+["aoyama","Parc Nord Aoyama","","park",[[1830,395],[1990,380],[2060,470],[1990,560],[1835,545]],[1940,468],2,"Parc urbain du nord, avec un étang, des terrains de sport et une roseraie."],
+["sakura-en","Sakura-en","桜園","park",[[1455,895],[1560,880],[1590,960],[1470,985]],[1522,945],3,"Petit parc de cerisiers plantés en allées ; on y pique-nique à la saison du hanami."],
+["riverain","Parc Riverain du Sorane","","park",[[2040,1990],[2260,2000],[2360,2200],[2420,2450],[2200,2450],[2140,2300],[2050,2150]],[2290,2330],2,"Parc linéaire le long du fleuve au sud : berges, pistes cyclables et roselières."],
+["golf","Belmont Golf Club","","park",[[2830,680],[3050,650],[3100,780],[2860,790]],[2955,725],3,"Golf 18 trous à quelques minutes du centre, réservé aux membres."],
+["hoshikawa","Parc du Hoshikawa","星川公園","park",[[3210,395],[3520,375],[3600,560],[3480,700],[3250,660]],[3400,412],2,"Grand parc paysager autour du lac, avec pédalos, roseraie et festival des lanternes."]
+];
+ 
+/* ---------- Points d'intérêt ---------- */
+const CATS={mon:["Monument historique","#b45309"],mus:["Musée","#7c3aed"],cult:["Culture du monde","#db2777"],edu:["Enseignement & recherche","#2563eb"],biz:["Affaires","#0891b2"],night:["Cyberpunk","#c026d3"],infra:["Infrastructure","#475569"]};
+const POIS=[
+["Cathédrale Notre-Dame-des-Eaux","","mon","⛪",2246,1002,2,"Cathédrale gothique du XIIIᵉ siècle sur l'Île Saint-Ambre ; ses arcs-boutants plongent presque dans le Sorane."],
+["Arc de la Fondation","","mon","🏛️",1880,950,2,"Arc triomphal de 1857 au centre de la Place de la Fondation, d'où rayonnent huit avenues. Point zéro des distances de la ville."],
+["Opéra Lumière","","mon","🎭",2040,925,2,"Opéra à façade dorée inauguré en 1875, fleuron des Grands Boulevards."],
+["Hôtel de Ville","","mon","🏛️",2110,1088,3,"Siège de la municipalité, bâtiment néo-Renaissance face à l'Île Saint-Ambre."],
+["Tour de l'Horloge","","mon","🕰️",2150,850,3,"Beffroi médiéval du XIVᵉ siècle, dernier vestige de l'enceinte primitive au bord du fleuve."],
+["Panthéon des Fondateurs","","mon","🏛️",1760,905,3,"Mausolée civique où reposent les ingénieurs et édiles qui ont bâti la cité."],
+["Puits Zéro — Monument de l'Axe","","mon","⚙️",1968,1165,2,"Mémorial du puits d'où furent lancés les tunneliers de l'Axe. Depuis ce point, le tunnel file en ligne droite vers l'ouest et vers l'est."],
+["Vieille Porte du Levant","","mon","🚪",2662,1168,3,"Ancienne porte de l'enceinte orientale (XVᵉ siècle) que traverse toujours le Boulevard Meridiana."],
+["Château de Montclair","","mon","🏰",640,930,2,"Forteresse médiévale restaurée, cernée par la forêt ; musée d'armes et fêtes médiévales chaque été."],
+["Halles Sainte-Aline","","mon","🏛️",2400,1105,3,"Grande halle à charpente métallique (1869), toujours marché couvert quotidien du Vieux-Sorane."],
+["Abbaye de Belmont","","mon","⛪",2450,795,3,"Abbaye romane du XIIᵉ siècle entourée de vignes urbaines, aux portes du quartier des villas."],
+["Pont Saint-Ambre","","mon","🌉",2172,1062,3,"Pont de pierre de 1611 reliant la rive gauche à l'île, bordé de bouquinistes."],
+["Temple Tsukikage-ji","月影寺","cult","⛩️",1500,868,2,"Temple bouddhique à pagode de trois étages au cœur de Sakura-machi ; cérémonie du thé le week-end."],
+["Yokochō des Ramen","ラーメン横丁","cult","🍜",1600,930,3,"Ruelle couverte de comptoirs à ramen ouverts jusqu'à l'aube."],
+["Basilique San Lorenzo","","cult","⛪",1430,1095,2,"Basilique baroque de Borgo Nuovo, avec son campanile et son parvis pavé."],
+["Piazza Vecchia","","cult","⛲",1500,1132,3,"Place ovale aux terrasses de cafés, cœur du quartier italien."],
+["Plaza Mayor Esperanza","","cult","💃",1450,1330,3,"Grande place aux arcades, fresques murales et concerts de salsa le vendredi."],
+["Grande Mosquée Al-Nour","مسجد النور","cult","🕌",1470,1478,2,"Mosquée aux deux minarets et à la cour de faïence bleue."],
+["Souk Al-Nour","","cult","🧿",1420,1525,3,"Souk couvert : épices, tapis, cuivres et lanternes."],
+["Porte du Dragon","龍門","cult","🐉",1930,1690,2,"Paifang monumental à quatre colonnes, entrée officielle de Longcheng."],
+["Marché Hanbit","","cult","🥢",2950,895,3,"Marché couvert coréen : kimchi, street-food et boutiques de cosmétiques."],
+["Albion Market Hall","","cult","🍺",1950,655,3,"Halle de marché victorienne, avec horloge, pubs et étals de produits britanniques."],
+["Marché aux poissons de Skandia","","cult","🐟",2450,1840,3,"Criée nordique : harengs, saumon fumé, smørrebrød."],
+["Musée d'Histoire de Meridia","","mus","🖼️",1990,858,2,"Du village de pêcheurs à la mégalopole : maquettes, cartes, archives des fondateurs."],
+["Musée des Beaux-Arts Ambroise-Lavigne","","mus","🎨",2105,1005,2,"Peinture et sculpture du XVᵉ au XXᵉ siècle, dans un ancien palais épiscopal."],
+["Musée d'Art Contemporain KINETIC","","mus","🖼️",2495,1125,2,"Art cinétique et installations dans une ancienne halle industrielle du Vieux-Sorane."],
+["Muséum de Sciences Naturelles Buffon","","mus","🦕",2095,1295,3,"Galerie de paléontologie, aquariums et collections géologiques, dans le parc de l'Aurore."],
+["Musée de l'Axe — Rail & Subduction","","mus","🚄",2035,1262,2,"Histoire du tunnel de l'Axe, maquette de tunnelier et simulateur de traversée à 1 200 km/h."],
+["Musée de la Photographie Hikari","光","mus","📷",1585,965,3,"Photographie japonaise et internationale, expositions temporaires."],
+["Musée Maritime du Sorane","","mus","⚓",2075,1925,3,"Histoire de la navigation fluviale, dans l'ancienne criée des Docks."],
+["Musée des Cultures du Monde Babel","","mus","🌍",1710,1130,3,"Arts et traditions des quartiers de la ville, en vitrines, vidéos et ateliers."],
+["Pixel Void — Musée des Arts Numériques","","mus","🕹️",2610,1455,2,"Art génératif, réalité augmentée et installations lumineuses au cœur de Yoru-machi."],
+["Musée des Sciences et Techniques","","mus","🔬",1120,1140,3,"Vitrine des innovations du Technopôle : robots, matériaux, énergie."],
+["Design Museum Skandia","","mus","🪑",2420,1795,3,"Design nordique, mobilier et luminaires, dans un ancien entrepôt portuaire."],
+["Musée des Tanneries","","mus","🧵",1560,1790,3,"Histoire du cuir et des faubourgs industriels."],
+["Université de Meridia","","edu","🎓",1830,1420,2,"Campus historique fondé au XVIIᵉ siècle : amphithéâtres, cloître et jardin des simples."],
+["Grande Bibliothèque Alexandrie","","edu","📚",1700,1350,3,"Bibliothèque nationale de 9 millions de volumes, salle de lecture sous verrière."],
+["Observatoire Kepler","","edu","🔭",1750,1520,3,"Coupole astronomique historique et planétarium public."],
+["Institut Curie-Hokusai","","edu","🔬",1120,1230,2,"Institut de recherche en géophysique et matériaux, à l'origine des technologies de l'Axe."],
+["Hôpital Universitaire Sainte-Aline","","edu","🏥",1700,1260,3,"Centre hospitalier universitaire de la ville."],
+["Tour Zénith (412 m)","","biz","🏙️",3010,1130,2,"La plus haute tour de Meridia : bureaux, observatoire et restaurant panoramique au 97ᵉ étage."],
+["Bourse de Meridia","","biz","💹",2950,1270,3,"Place financière régionale, dans un bâtiment de verre et d'acier."],
+["Arche de l'Horizon","","biz","⬜",3215,1200,2,"Cube évidé de 110 m qui ferme l'esplanade de l'Axe, à l'extrémité est du quartier d'affaires."],
+["Centre de Congrès Horizon","","biz","🎤",2900,1120,3,"Salons professionnels et conférences internationales."],
+["Tour Helix — siège Helix Corp","","night","🌐",2610,1390,2,"Mégatour hérissée d'antennes et d'écrans holographiques, siège de la première mégacorporation de Meridia."],
+["Data-Cathédrale","","night","💾",2500,1560,3,"Ancien temple reconverti en centre de données : ses vitraux sont des écrans."],
+["Marché Noir Nébuleux","","night","🌃",2690,1480,3,"Bazar sous une dalle de béton : pièces détachées, implants, logiciels et ramen."],
+["Allée des Enseignes (Neon Alley)","","night","✨",2560,1300,3,"Ruelle saturée de néons où les enseignes se touchent au-dessus de la rue."],
+["Clinique Chrome Row","","night","🦾",2660,1600,3,"Cabinets de prothèses cybernétiques et d'implants, ouverts 24 h/24."],
+["Arcade Nébula","","night","🕹️",2440,1400,3,"Salle de jeux sur trois étages, tournois d'e-sport et cabines de réalité virtuelle."],
+["Jardin Botanique de Belmont","","edu","🌺",2610,890,2,"Serres victoriennes, roseraie et collection d'orchidées."],
+["Villa des Ambassades","","biz","🏡",2500,960,3,"Résidence de prestige et lieux de réception diplomatiques."],
+["Stade Meridia Arena","","infra","🏟️",3010,1760,2,"Stade de 60 000 places et toit rétractable, pour le football et les concerts."],
+["Aéroport International Meridia-Zéphyr","MZR","infra","✈️",3560,1960,2,"Aéroport à deux pistes parallèles, relié à l'Axe Central par la ligne M3 en 28 minutes."],
+["Hippodrome de Montclair","","infra","🏇",420,640,3,"Hippodrome et champs de courses de la banlieue ouest."],
+["Port fluvial du Sorane","","infra","⚓",2030,1980,3,"Terminal de conteneurs et de vrac sur les bassins du sud."]
+];
+ 
+/* ---------- Stations et lignes ---------- */
+const S={
+occ:["Porte d'Occident",300,1200],mon:["Montclair",620,1200],tec:["Technopôle",1000,1200],ctr:["Axis Central",2000,1200,"中央軸駅"],hor:["Horizon",3000,1200],ori:["Porte d'Orient",3700,1200],
+nwz:["Nordwald Zentrum",1800,140],nao:["Nord-Aoyama",1800,430],alb:["Albion Row",1880,690,"","l"],fnd:["Fondation",1880,980,"","l"],uni:["Universitas",1920,1410,"","l"],lch:["Longcheng",1930,1720,"龍城","l"],dks:["Docks du Sorane",2000,1880],neu:["Neustadt",1980,2150],sud:["Süderhafen",1980,2330],
+ngt:["Neon Gate",2866,1540,"夜門"],ska:["Skandia Wharf",2500,1789],tan:["Faubourg des Tanneurs",1500,1789],ere:["Campus Erasme",1134,1540],han:["Hanamizuki-dai",1134,860,"花水木台"],sel:["Saint-Éloi",1500,611],aoy:["Parc Aoyama",2000,520],mbe:["Mont-Belvédère",2500,611],hbt:["Hanbit-dong",2866,860,"한빛동"],
+pin:["Pinewood Gardens",720,480],sak:["Sakura-machi",1500,900,"桜町"],aur:["Parc de l'Aurore",2140,1360,"","l"],yor:["Yoru-machi",2450,1480,"夜町"],val:["Val Solaire",3200,1700],apt:["Aéroport MZR",3560,1960],
+san:["Santa Lucía",620,1850],bar:["Barrio Esperanza",1470,1330,"","l"],sta:["Saint-Ambre",2245,1040,"","l"],bel:["Belmont Gardens",2540,880],hos:["Hoshikawa",3250,640,"星川"],hig:["Highfield Park",3600,720],
+lil:["Cité des Lilas",2780,220],hal:["Halles de Sorane",2430,1150],avf:["Aube Verte",2600,2100],sun:["Sun Harbor",2700,2320],
+dat:["Data-Cathédrale",2500,1590],mkn:["Marché Noir",2690,1520],hlx:["Tour Helix",2620,1400],nal:["Allée Néon",2560,1300],
+ngw:["Nordwald Ouest",1400,150],nwe:["Nordwald Est",2200,200],hnk:["Hoshikawa Nord",3250,380],kgy:["Kōgyō",1200,2000,"工業"],zin:["Zone Industrielle",1500,2050],rvs:["Riverside",3000,2170],
+qn:["Quai Nord",2385,380],pfd:["Pont des Fondateurs",2330,760],phs:["Pont Hoshi",2330,1440],vhk:["Viaduc Hikari",2200,1780],dke:["Docks Est",2140,1940]
+};
+const LINES=[
+{id:"axis",n:"AXIS",c:"#c8102e",kind:"axis",r:["occ","mon","tec","ctr","hor","ori"],d:"Le train à subduction : un tunnel rectiligne ouest–est qui plonge sous la croûte terrestre. Vers l'ouest, Castelmar (480 km, 24 min) ; vers l'est, Tsukishiro (610 km, 31 min). Six gares seulement dans l'agglomération."},
+{id:"m1",n:"M1",c:"#e53935",r:["nwz",[1800,300],"nao",[1800,600],"alb",[1880,720],"fnd",[1880,1080],"ctr",[2000,1300],"uni","lch",[1960,1800],"dks","neu","sud"],d:"Ligne nord–sud, de Nordwald au port de Süderhafen, via la Place de la Fondation et Axis Central."},
+{id:"m2",n:"M2",c:"#1e6fd9",ring:[2000,1200,1000,680],r:["hor","ngt","ska","dks","tan","ere","tec","han","sel","aoy","mbe","hbt"],d:"Ligne circulaire de 12 stations autour de la proche banlieue, en correspondance avec toutes les autres lignes."},
+{id:"m3",n:"M3",c:"#1ea54b",r:["pin","han","sak","fnd","ctr","aur","yor","ngt","val","apt"],d:"La diagonale nord-ouest / sud-est : de Pinewood Gardens à l'aéroport MZR via Axis Central et Yoru-machi."},
+{id:"m4",n:"M4",c:"#f59e0b",r:["san","ere","bar","ctr","sta","bel","hbt","hos","hig"],d:"La diagonale sud-ouest / nord-est : de Santa Lucía aux abords du Bois de l'Est, en passant par l'Île Saint-Ambre."},
+{id:"m5",n:"M5",c:"#8b5cf6",r:["lil","mbe","bel","hal","yor","ska","avf","sun"],d:"Ligne nord–sud de la rive droite, de la Cité des Lilas à Sun Harbor, via le Vieux-Sorane et Yoru-machi."},
+{id:"neon",n:"NEON",c:"#ff2bd6",kind:"neon",loop:1,r:["yor",[2470,1540],"dat",[2640,1600],"mkn","hlx","nal",[2440,1340]],d:"Monorail suspendu automatique du quartier cyberpunk (boucle de 5 stations)."},
+{id:"t1",n:"T1",c:"#7cb342",kind:"tram",r:["ngw","nwz","nwe","lil","hnk"],d:"Tramway du nord : Nordwald, Cité des Lilas et Hoshikawa."},
+{id:"t2",n:"T2",c:"#00897b",kind:"tram",r:["kgy","zin","neu","avf","rvs"],d:"Tramway du sud : Kōgyō, Neustadt, Aube Verte et Riverside."},
+{id:"rb",n:"BATEAU",c:"#4aa8e6",kind:"boat",r:["qn","pfd","sta","phs","vhk","dke"],d:"Bateau-bus du Sorane : six pontons entre le quai nord et les Docks."}
+];
+const RP=l=>l.r.map(k=>typeof k==="string"?[S[k][1],S[k][2]]:k);
+for(const k in S)S[k].lines=[];
+LINES.forEach(l=>l.r.forEach(k=>{if(typeof k==="string"&&!S[k].lines.includes(l.id))S[k].lines.push(l.id)}));
+ 
+/* ---------- Routes ---------- */
+const ROADS=[
+["hwy","Boulevard Périphérique",{e:[2000,1200,700,500]},2,[25]],
+["hwy","Rocade Kōsoku · A1",{e:[2000,1200,1300,850]},2,[25]],
+["hwy","Ceinture Mikan · A2",{e:[2000,1200,1750,1080]},2,[25]],
+["hwy","A10 · Autoroute du Nord",[[2100,-40],[2060,120],[1990,300],[1985,520],[2000,700]],3,[45],1],
+["hwy","A20 · Autoroute du Sud",[[2080,1700],[2050,1850],[2000,2050],[1960,2250],[1980,2440]],3,[60],1],
+["hwy","A30 · Autoroute de l'Hoshikawa",[[2620,900],[2900,650],[3300,420],[3700,220],[4040,60]],3,[50],1],
+["hwy","A40 · Autoroute de l'Aéroport",[[2650,1560],[2950,1800],[3350,2040],[3700,2250],[4040,2440]],3,[50],1],
+["hwy","A50 · Autoroute du Nord-Ouest",[[-40,-40],[400,180],[750,380],[1100,620],[1400,900]],3,[50],1],
+["hwy","A60 · Autoroute du Sud-Ouest",[[-40,2440],[350,2250],[700,2050],[1050,1800],[1350,1560]],3,[50],1],
+["art2","Boulevard Meridiana",[[-40,1200],[4040,1200]],2,[13,32,66,87]],
+["ave","Avenue de la Fondation",[[1560,980],[2215,980]],3],
+["ave","Avenue de l'Opéra",[[1880,660],[1880,1300]],3],
+["ave","Avenue Victor-Aurel",[[1654,1206],[2106,754]],3],
+["ave","Avenue du Général-Sorel",[[1654,754],[2106,1206]],3],
+["ave","",{e:[1880,980,30,30]},3],
+["ave","Avenue de la Gare Centrale",[[1880,980],[2000,1200]],3],
+["art","Boulevard des Grands Hommes",[[1660,830],[1800,800],[2000,782],[2180,810],[2240,880]],3,[50],1],
+["art","Quai de la Rive Gauche",[[2330,380],[2255,560],[2275,760],[2240,880]],3,[50],1],
+["art","",[[2180,1200],[2200,1290],[2275,1440],[2215,1620],[2145,1780],[2085,1940]],3,[50],1],
+["art","Quai de la Rive Droite",[[2440,380],[2365,560],[2385,760],[2350,880]],3,[50],1],
+["art","",[[2290,1200],[2310,1290],[2385,1440],[2325,1620],[2255,1780],[2195,1940]],3,[50],1],
+["art","Pont des Fondateurs",[[2205,895],[2300,880],[2400,860]],3],
+["art","Pont Saint-Ambre",[[2140,1070],[2245,1040],[2340,1022]],3],
+["art","Pont Suspendu Hoshi",[[2200,1480],[2330,1450],[2470,1430]],3],
+["art","Pont Nord",[[2190,600],[2310,570],[2440,560]],3],
+["art","Viaduc Hikari",[[2050,1745],[2200,1725],[2340,1690]],3],
+["art","Pont du Port",[[2020,1990],[2140,1955],[2260,1960]],3],
+["art","Avenue des Universités",[[1300,1350],[1650,1355],[1900,1380],[2225,1390]],3,[50],1],
+["ave","Sakura-dōri",[[1350,905],[1500,900],[1650,930]],3,[50],1],
+["ave","Via Roma",[[1330,1110],[1500,1125],[1650,1115]],3],
+["ave","Calle Mayor",[[1320,1330],[1480,1325],[1650,1335]],3],
+["ave","龍街 · Long Street",[[1790,1720],[1950,1715],[2110,1705]],3],
+["ave","Avenue des Tilleuls",[[2390,850],[2600,870],[2760,860]],3],
+["ave","Avenue des Tours",[[3020,1040],[3020,1360]],3],
+["neon","Neon Boulevard",[[2400,1330],[2600,1325],[2790,1335]],3],
+["neon","Rue des Enseignes",[[2560,1250],[2560,1380],[2580,1650]],3,[50],1],
+["neon2","",[[2450,1265],[2450,1560]],3],
+["neon2","",[[2690,1250],[2690,1580]],3],
+["neon2","",[[2400,1450],[2790,1450]],3],
+["neon2","",[[2420,1560],[2760,1560]],3]
+];
+ 
+/* ---------- Registre ---------- */
+const REG={};
+const dCol=t=>t==="cyber"?"#c026d3":t==="lux"?"#5a9a3a":t==="biz"||t==="tech"?"#0891b2":t==="cult"?"#db2777":t==="univ"?"#3b5bdb":"#8a6d3b";
+ 
+/* ---------- Construction ---------- */
+function build(){
+  const q=id=>document.getElementById(id);
+  /* base */
+  q("gBase").innerHTML=`<rect x="-200" y="-200" width="4400" height="2800" fill="var(--outside)"/><rect class="pat" x="-200" y="-200" width="4400" height="2800" fill="url(#${patId("pField")})" pointer-events="none"/>`
+   +`<ellipse cx="2000" cy="1200" rx="1950" ry="1180" fill="var(--city)"/><ellipse cx="2000" cy="1200" rx="1300" ry="850" fill="var(--proche)"/><ellipse cx="2000" cy="1200" rx="700" ry="500" fill="var(--centre)"/>`;
+  /* zones */
+  q("gZone").innerHTML=ZN.map(z=>`<ellipse class="zl" cx="${z[0]}" cy="${z[1]}" rx="${z[2]}" ry="${z[3]}"/>`).join("");
+  /* quartiers */
+  let dH="",dL="";
+  for(const d of D){
+    const t=TY[d.t]||{};const h=d.o.h!=null?d.o.h:t.h,s=d.o.s!=null?d.o.s:t.s,p=d.o.p!==undefined?d.o.p:t.p,rot=d.o.rot||0;
+    const cyb=d.t==="cyber";
+    dH+=`<polygon class="df${cyb?" cyb":""}" data-id="d:${d.id}" points="${P(d.poly)}" style="--h:${h||0};--s:${s||0}%"/>`;
+    if(p)dH+=`<polygon class="pat" points="${P(d.poly)}" fill="url(#${patId(p,rot)})" pointer-events="none"/>`;
+    const lc=d.lv===1?"":d.lv===2?" lv2":" lv3";const fs=d.lv===1?13:11;
+    dL+=`<text class="t dl${cyb?" cy":""}${lc}" style="--h:${h||200};--fs:${fs}px" x="${d.lb[0]}" y="${d.lb[1]}">${esc(d.n.toUpperCase())}</text>`;
+    if(d.nat)dL+=`<text class="t dl nat${cyb?" cy":""} lv3" style="--h:${h||200}" x="${d.lb[0]}" y="${d.lb[1]}">${esc(d.nat)}</text>`;
+    const c=cent(d.poly),bb=bbox(d.poly);
+    REG["d:"+d.id]={id:"d:"+d.id,kind:"district",name:d.n,nat:d.nat,ic:d.o.ic||t.ic||"🏘️",catLabel:d.o.cat||t.cat,col:dCol(d.t),x:c[0],y:c[1],desc:d.d,bb};
+  }
+  q("gDist").innerHTML=dH;q("lblDist").innerHTML=dL;
+  /* parcs */
+  let kH="",kL="";
+  for(const k of PARKS){
+    kH+=`<path class="pk ${k[3]==="forest"?"forest":""}" data-id="k:${k[0]}" d="${smooth(k[4],true)}"/>`;
+    kL+=`<text class="t kl ${k[6]===2?"lv2":"lv3"}" x="${k[5][0]}" y="${k[5][1]}">${esc(k[1])}</text>`;
+    const c=cent(k[4]);
+    REG["k:"+k[0]]={id:"k:"+k[0],kind:"park",name:k[1],nat:k[2],ic:"🌳",catLabel:"Parc & nature",col:"#16a34a",x:c[0],y:c[1],desc:k[7],bb:bbox(k[4])};
+  }
+  q("gPark").innerHTML=kH;q("lblPark").innerHTML=kL;
+  /* eau */
+  const rv=smooth(RIVER),isl=smooth([[2285,900],[2275,960],[2245,1040],[2215,1120],[2228,1180]]),wid=smooth([[2200,1780],[2140,1940],[2165,2100],[2250,2250],[2310,2450]]);
+  q("gWater").innerHTML=
+    `<path class="wt wte" d="${rv}" stroke-width="84"/><path class="wt wte" d="${isl}" stroke-width="154"/><path class="wt wte" d="${wid}" stroke-width="110"/>`
+   +`<path class="wt wtf" d="${rv}" stroke-width="70"/><path class="wt wtf" d="${isl}" stroke-width="140"/><path class="wt wtf" d="${wid}" stroke-width="96"/>`
+   +`<path class="wt" d="${rv}" stroke-width="70" stroke="transparent" style="pointer-events:stroke;cursor:pointer" data-id="w:sorane"/>`
+   +`<path class="lake" d="${smooth(LAKE,true)}" data-id="w:hoshikawa"/>`
+   +`<ellipse class="df isl" data-id="d:ile" cx="2245" cy="1040" rx="34" ry="100" transform="rotate(20 2245 1040)" style="--h:25;--s:45%"/><ellipse class="pat" cx="2245" cy="1040" rx="34" ry="100" transform="rotate(20 2245 1040)" fill="url(#${patId("pHist")})" pointer-events="none"/>`;
+  REG["d:ile"]={id:"d:ile",kind:"district",name:"Île Saint-Ambre",nat:"Cité médiévale",ic:"⛪",catLabel:"Quartier historique",col:"#8a6d3b",x:2245,y:1040,desc:"L'île du fleuve, berceau de la ville : cathédrale, palais de justice et ruelles médiévales. La cité a débuté ici, il y a plus de huit siècles.",bb:[2200,940,2290,1140]};
+  REG["w:sorane"]={id:"w:sorane",kind:"water",name:"Le Sorane",nat:"Fleuve",ic:"🌊",catLabel:"Fleuve",col:"#2b8fd6",x:2330,y:760,desc:"Fleuve nord–sud qui traverse la ville et se divise autour de l'Île Saint-Ambre. Quais aménagés, bateaux-bus et sept ponts en centre-ville.",z:0.8};
+  REG["w:hoshikawa"]={id:"w:hoshikawa",kind:"water",name:"Lac Hoshikawa",nat:"星川湖",ic:"🌊",catLabel:"Lac",col:"#2b8fd6",x:3400,y:530,desc:"Lac de plaisance au nord-est, bordé de sentiers, de pontons et du festival des lanternes de l'été.",z:0.9};
+  /* étiquettes eau */
+  q("defs").insertAdjacentHTML("beforeend",`<path id="rvN" d="${smooth(RIVER.slice(1,5))}"/><path id="rvS" d="${smooth(RIVER.slice(8,12))}"/><path id="rvE" d="${smooth(RIVER.slice(12,15))}"/>`
+    +`<path id="zc" d="${ell([2000,1200,668,468])}"/><path id="zp" d="${ell([2000,1200,1268,818])}"/><path id="zb" d="${ell([2000,1200,1898,1148])}"/>`);
+  q("lblWater").innerHTML=`<text class="t wl"><textPath href="#rvN" startOffset="50%">FLEUVE SORANE</textPath></text><text class="t wl lv2"><textPath href="#rvS" startOffset="50%">FLEUVE SORANE</textPath></text><text class="t wl"><textPath href="#rvE" startOffset="50%">SORANE</textPath></text><text class="t wl lv2" x="3420" y="530" style="--fs:11px">Lac Hoshikawa</text>`;
+  /* zone labels */
+  q("lblZone").innerHTML=`<text class="t zt only1" style="--fs:24px"><textPath href="#zc" startOffset="12%">CENTRE-VILLE</textPath></text><text class="t zt only1"><textPath href="#zp" startOffset="14%">PROCHE BANLIEUE</textPath></text><text class="t zt only1" style="--fs:30px"><textPath href="#zb" startOffset="14%">BANLIEUE</textPath></text>`
+    +`<text class="t ax-lbl" x="60" y="1172" style="text-anchor:start">◀ vers Castelmar · 480 km · 24 min</text><text class="t ax-lbl" x="3940" y="1172" style="text-anchor:end">vers Tsukishiro · 610 km · 31 min ▶</text>`;
+  /* routes */
+  let cas="",fil="",rl="";
+  ROADS.forEach((r,i)=>{
+    const g=r[2],d=g.e?ell(g.e):(r[5]?smooth(g):L(g));
+    cas+=`<path class="rc ${r[0]}" d="${d}"/>`;fil+=`<path id="r${i}" class="rf ${r[0]}" d="${d}"/>`;
+    if(r[1]){const lc=r[3]===2?" lv2":" lv3";(r[4]||[50]).forEach(o=>{rl+=`<text class="t rl${lc}"><textPath href="#r${i}" startOffset="${o}%">${esc(r[1])}</textPath></text>`})}
+  });
+  q("gRoad").innerHTML=cas+fil;q("lblRoad").innerHTML=rl;
+  /* bâti particulier */
+  let b="";const R=rng(11);
+  for(let i=0;i<7;i++)for(let j=0;j<5;j++){const x=2860+i*52+R()*14,y=1060+j*60+R()*14;if(Math.abs(y+14-1200)<32)continue;const w=20+R()*16;b+=`<rect class="pat twS" x="${f1(x+5)}" y="${f1(y-5)}" width="${f1(w)}" height="${f1(w)}"/><rect class="pat tw" x="${f1(x)}" y="${f1(y)}" width="${f1(w)}" height="${f1(w)}"/>`}
+  const cyP=D.find(d=>d.id==="yoru-machi").poly,R2=rng(7),tw=[];
+  let tries=0;while(tw.length<30&&tries++<900){const x=2400+R2()*390,y=1250+R2()*430;if(!inPoly(x,y,cyP))continue;if(tw.some(t=>Math.hypot(t[0]-x,t[1]-y)<34))continue;tw.push([x,y])}
+  tw.forEach((t,i)=>{const w=14+R2()*22,c=i%2?"#00e5ff":"#ff2bd6";b+=`<rect class="pat cwS" x="${f1(t[0]+4)}" y="${f1(t[1]-4)}" width="${f1(w)}" height="${f1(w)}"/><rect class="pat cw" style="stroke:${c}" x="${f1(t[0])}" y="${f1(t[1])}" width="${f1(w)}" height="${f1(w)}"/>`});
+  b+=`<ellipse class="lv2 stad" cx="3010" cy="1760" rx="58" ry="42"/><ellipse class="lv2" cx="3010" cy="1760" rx="34" ry="22" fill="var(--park)" stroke="var(--rw)" stroke-width="2"/>`;
+  b+=`<path class="lv2 rw" d="M3400 2080L3850 2040M3420 2140L3860 2100"/><rect class="lv2 term" x="3510" y="1962" width="90" height="26" rx="4" transform="rotate(-5 3555 1975)"/>`;
+  b+=`<rect class="lv2 term" x="3186" y="1180" width="60" height="40" rx="0" style="fill:none;stroke:var(--btall);stroke-width:12"/>`;
+  q("gBld").innerHTML=b;
+  /* transports */
+  let tc="",tl="";
+  LINES.forEach(l=>{
+    const d=l.ring?ell(l.ring):l.kind==="boat"?smooth(RIVER.slice(2,12)):L(RP(l))+(l.loop?"Z":"");
+    tc+=`<path class="tc ${l.kind||""}" d="${d}" data-lines="${l.id}"/>`;
+    tl+=`<path class="tl ${l.kind||""}" d="${d}" style="stroke:${l.c}" data-lines="${l.id}" data-id="l:${l.id}"/>`;
+    const pts=l.ring?[[1000,520],[3000,1880]]:RP(l);
+    const bb=bbox(pts);
+    REG["l:"+l.id]={id:"l:"+l.id,kind:"line",line:l,name:l.id==="axis"?"Ligne AXIS · train à subduction":l.id==="rb"?"Bateau-bus du Sorane":l.id.startsWith("t")?"Tramway "+l.n:l.id==="neon"?"Monorail NEON":"Métro "+l.n,nat:"",ic:l.id==="axis"?"🚄":l.kind==="boat"?"⛴️":l.kind==="tram"?"🚊":"🚇",catLabel:l.kind==="boat"?"Transport fluvial":l.kind==="tram"?"Tramway":l.id==="axis"?"Grande vitesse":l.id==="neon"?"Monorail":"Métro",col:l.c,x:(bb[0]+bb[2])/2,y:(bb[1]+bb[3])/2,desc:l.d,bb};
+  });
+  let st="";
+  for(const k in S){
+    const s=S[k],ls=s.lines,inter=ls.length>1,isAx=ls.includes("axis"),lvc=(k==="ctr"||isAx)?"":inter?" lv2":" lv3";
+    const col=(LINES.find(l=>l.id===ls[0])||{}).c||"#333";
+    st+=`<g class="st${lvc}" data-id="s:${k}" data-lines="${ls.join(" ")}" transform="translate(${s[1]},${s[2]})"><g class="mk">`;
+    if(k==="ctr")st+=`<rect x="-12" y="-12" width="24" height="24" rx="7" class="axc"/><text class="em" style="font-size:13px">🚄</text>`;
+    else if(isAx)st+=`<rect x="-6.5" y="-6.5" width="13" height="13" rx="3.5" class="axs"/>`;
+    else st+=`<circle r="${inter?6:4.3}" class="sc${inter?" ix":""}" style="stroke:${col}"/>`;
+    st+=`</g><text class="t sl${inter||isAx?" b":""}${s[4]==="l"?" l":""}" style="--fs:${k==="ctr"?13:10.5}px">${esc(s[0])}</text></g>`;
+    REG["s:"+k]={id:"s:"+k,kind:"station",key:k,name:s[0],nat:s[3]||"",ic:"🚉",catLabel:isAx?"Gare AXIS":ls.some(x=>x.startsWith("m"))?"Station de métro":"Station",col:"#334155",x:s[1],y:s[2],desc:k==="ctr"?"La gare souterraine à l'origine de la ville : quatre lignes de métro s'y croisent et le train AXIS y rejoint Castelmar en 24 minutes et Tsukishiro en 31. Tout le reste de Meridia s'est développé autour de cette gare.":isAx?"Gare de la ligne AXIS (train à subduction).":"Station desservie par : "+ls.map(x=>LINES.find(l=>l.id===x).n).join(", ")+"."};
+  }
+  q("gTransit").innerHTML=tc+tl+st;
+  /* POI */
+  let pH="";
+  POIS.forEach((p,i)=>{
+    const c=CATS[p[2]],lc=p[6]===2?" lv2":" lv3";
+    pH+=`<g class="poi${lc}" data-id="p:${i}" transform="translate(${p[4]},${p[5]})"><g class="mk"><circle r="10" style="fill:${c[1]}"/><text class="em">${p[3]}</text></g><text class="t pl">${esc(p[0])}</text></g>`;
+    REG["p:"+i]={id:"p:"+i,kind:"poi",name:p[0],nat:p[1],ic:p[3],catLabel:c[0],col:c[1],x:p[4],y:p[5],desc:p[7],z:1.5};
+  });
+  q("gPoi").innerHTML=pH;
+  q("defs").insertAdjacentHTML("afterbegin",Object.values(usedPat).join(""));
+}
+build();
+ 
+/* ---------- Vue / interactions ---------- */
+const box=$("#app"),svg=$("#map"),card=$("#card");
+const MW=4000,MH=2400;let W=box.clientWidth,H=box.clientHeight;
+let view={cx:2000,cy:1200,s:0.45};
+const minS=()=>Math.min(W/4200,H/2520);
+function clampView(){view.s=Math.max(minS(),Math.min(4,view.s));view.cx=Math.max(0,Math.min(MW,view.cx));view.cy=Math.max(0,Math.min(MH,view.cy))}
+function scaleBar(){const mpp=20/view.s,nice=[50,100,200,500,1000,2000,5000,10000,20000,50000];let m=nice[0];for(const v of nice){if(v/mpp<=110)m=v}
+  $("#sbBar").style.width=(m/mpp)+"px";$("#sbTxt").textContent=m>=1000?(m/1000)+" km":m+" m"}
+function apply(){const w=W/view.s,h=H/view.s;svg.setAttribute("viewBox",`${view.cx-w/2} ${view.cy-h/2} ${w} ${h}`);svg.style.setProperty("--k",(1/view.s).toFixed(4));
+  const lv=view.s<0.32?1:view.s<0.75?2:3;if(svg.dataset.level!=lv)svg.dataset.level=lv;scaleBar()}
+function zoomAt(px,py,f){const r=svg.getBoundingClientRect(),ox=px-r.left-W/2,oy=py-r.top-H/2,mx=view.cx+ox/view.s,my=view.cy+oy/view.s;
+  view.s=Math.max(minS(),Math.min(4,view.s*f));view.cx=mx-ox/view.s;view.cy=my-oy/view.s;clampView();apply()}
+let anim=0;
+function flyTo(cx,cy,s,dur=750){cancelAnimationFrame(anim);const a={...view},b={cx,cy,s:Math.max(minS(),Math.min(4,s))},t0=performance.now();
+  const step=t=>{let u=Math.min(1,(t-t0)/dur);u=u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2;
+    view.s=Math.exp(Math.log(a.s)+(Math.log(b.s)-Math.log(a.s))*u);view.cx=a.cx+(b.cx-a.cx)*u;view.cy=a.cy+(b.cy-a.cy)*u;clampView();apply();if(u<1)anim=requestAnimationFrame(step)};
+  anim=requestAnimationFrame(step)}
+function focusOn(x,y,s){const off=W<700?(H*0.2)/s:0;flyTo(x,y+off,s)}
+function fitBB(bb,pad){const bw=Math.max(60,bb[2]-bb[0]),bh=Math.max(60,bb[3]-bb[1]);const s=Math.min(W*(pad||.62)/bw,H*(pad||.62)/bh);
+  focusOn((bb[0]+bb[2])/2,(bb[1]+bb[3])/2,Math.max(.3,Math.min(1.6,s)))}
+function initView(){view.s=Math.max(.28,Math.min(.6,W/2600));view.cx=2000;view.cy=1200;clampView();apply()}
+ 
+svg.addEventListener("wheel",e=>{e.preventDefault();zoomAt(e.clientX,e.clientY,Math.exp(-e.deltaY*(e.ctrlKey?.01:.0016)))},{passive:false});
+svg.addEventListener("dblclick",e=>{zoomAt(e.clientX,e.clientY,1.8)});
+const ptr=new Map();let moved=0,pinch=null,armed=false;
+svg.addEventListener("pointerdown",e=>{ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});cancelAnimationFrame(anim);
+  if(ptr.size===1){moved=0;armed=true}else if(ptr.size===2){const[a,b]=[...ptr.values()];pinch=Math.hypot(a.x-b.x,a.y-b.y);moved=99}
+  svg.classList.add("drag")});
+window.addEventListener("pointermove",e=>{const p=ptr.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+  if(ptr.size===1){view.cx-=dx/view.s;view.cy-=dy/view.s;moved+=Math.abs(dx)+Math.abs(dy);clampView();apply()}
+  else if(ptr.size===2&&pinch){const[a,b]=[...ptr.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);zoomAt((a.x+b.x)/2,(a.y+b.y)/2,d/pinch);pinch=d}});
+const endP=e=>{if(!ptr.has(e.pointerId))return;const one=ptr.size===1;ptr.delete(e.pointerId);if(ptr.size<2)pinch=null;if(!ptr.size)svg.classList.remove("drag");
+  if(one&&armed&&moved<6&&e.type==="pointerup"&&svg.contains(e.target))clickMap(e.target);if(!ptr.size)armed=false};
+window.addEventListener("pointerup",endP);window.addEventListener("pointercancel",endP);
+window.addEventListener("resize",()=>{W=box.clientWidth;H=box.clientHeight;clampView();apply()});
+ 
+/* sélection */
+let selEl=null;
+function clickMap(t){const el=t.closest&&t.closest("[data-id]");if(el)select(el.dataset.id,false);else{closeCard()}}
+function focusLine(id){svg.classList.toggle("focus",!!id);svg.querySelectorAll("[data-lines]").forEach(e=>e.classList.toggle("on",!!id&&e.dataset.lines.split(" ").includes(id)))}
+function pulse(x,y){const g=$("#gFx");g.innerHTML=`<circle class="pulse" cx="${x}" cy="${y}"/>`;setTimeout(()=>{g.innerHTML=""},2600)}
+function select(id,fly){
+  const it=REG[id];if(!it)return;showCard(it);
+  if(selEl)selEl.classList.remove("sel");selEl=svg.querySelector(`[data-id="${id}"].df, [data-id="${id}"].pk`);if(selEl)selEl.classList.add("sel");
+  focusLine(it.kind==="line"?it.line.id:null);
+  if(fly||it.kind==="line"){
+    if(it.kind==="line")fitBB(it.bb,.7);else if(it.bb&&(it.kind==="district"||it.kind==="park"))fitBB(it.bb,.6);else focusOn(it.x,it.y,it.z||1.5);
+    if(it.kind!=="line")pulse(it.x,it.y);
+  }
+}
+function showCard(it){
+  card.hidden=false;const ic=$("#cIc");ic.textContent=it.ic;ic.style.background=it.col||"var(--ui-blue)";
+  $("#cName").textContent=it.name;$("#cNat").textContent=it.nat||"";$("#cNat").hidden=!it.nat;
+  $("#cChips").innerHTML=`<span class="chip">${esc(it.catLabel)}</span>`+(it.kind!=="line"?`<span class="chip">${zoneOf(it.x,it.y)}</span>`:"");
+  $("#cDesc").textContent=it.desc;
+  let ex="";
+  if(it.kind==="station")ex=S[it.key].lines.map(x=>{const l=LINES.find(z=>z.id===x);return `<button class="pill" style="background:${l.c}" data-go="l:${l.id}">${l.n}</button>`}).join("");
+  if(it.kind==="line"){const l=it.line;ex=l.r.filter(k=>typeof k==="string").map(k=>`<button class="sbtn" data-go="s:${k}">${esc(S[k][0])}</button>`).join("")}
+  $("#cExtra").innerHTML=ex;
+}
+function closeCard(){card.hidden=true;if(selEl){selEl.classList.remove("sel");selEl=null}focusLine(null);$("#gFx").innerHTML=""}
+$("#cardX").addEventListener("click",closeCard);
+$("#cExtra").addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(b)select(b.dataset.go,true)});
+ 
+/* commandes */
+$("#bIn").addEventListener("click",()=>flyTo(view.cx,view.cy,view.s*1.7,350));
+$("#bOut").addEventListener("click",()=>flyTo(view.cx,view.cy,view.s/1.7,350));
+$("#bAll").addEventListener("click",()=>{closeCard();flyTo(2000,1200,minS()*1.02,900)});
+const linesP=$("#lines");
+linesP.innerHTML=`<h3>Lignes de transport</h3>`+LINES.map(l=>`<button class="lp" data-go="l:${l.id}"><span class="chipl" style="background:${l.c}">${l.n}</span><span>${esc(REG["l:"+l.id].name)}</span></button>`).join("")+`<p>Cliquez sur une ligne pour la mettre en évidence. Les tirets rouges figurent le tunnel de l'Axe, souterrain et rectiligne.</p>`;
+linesP.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(b)select(b.dataset.go,true)});
+$("#bLines").addEventListener("click",()=>{linesP.hidden=!linesP.hidden});
+document.querySelectorAll(".lyr").forEach(b=>b.addEventListener("click",()=>{b.classList.toggle("on");box.classList.toggle("off-"+b.dataset.l,!b.classList.contains("on"))}));
+ 
+/* recherche */
+const idx=Object.values(REG).map(it=>({it,n:norm(it.name+" "+(it.nat||"")+" "+it.catLabel)}));
+const q=$("#q"),res=$("#res");
+const QUICK=["s:ctr","d:yoru-machi","d:grands-boulevards","d:belmont","d:sakura-machi","d:horizon","l:axis"];
+function rowHTML(it){return `<button class="res" data-go="${it.id}"><span class="ri" style="background:${it.col||"#1a73e8"}">${it.ic}</span><span><b>${esc(it.name)}</b><small>${esc(it.catLabel)}${it.nat?" · "+esc(it.nat):""}${it.kind!=="line"?" · "+zoneOf(it.x,it.y):""}</small></span></button>`}
+function renderRes(){const v=norm(q.value.trim());$("#qx").hidden=!q.value;
+  if(!v){res.innerHTML=`<h4>Lieux à voir</h4>`+QUICK.map(k=>rowHTML(REG[k])).join("")}
+  else{const m=idx.filter(o=>o.n.includes(v)).sort((a,b)=>(a.n.startsWith(v)?0:1)-(b.n.startsWith(v)?0:1)).slice(0,9);
+    res.innerHTML=m.length?m.map(o=>rowHTML(o.it)).join(""):`<h4>Aucun résultat pour « ${esc(q.value)} »</h4>`}
+  res.hidden=false}
+q.addEventListener("focus",renderRes);q.addEventListener("input",renderRes);
+q.addEventListener("keydown",e=>{if(e.key==="Enter"){const b=res.querySelector(".res");if(b){select(b.dataset.go,true);res.hidden=true;q.blur()}}if(e.key==="Escape"){res.hidden=true;q.blur()}});
+$("#qx").addEventListener("click",()=>{q.value="";renderRes();q.focus()});
+res.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(b){select(b.dataset.go,true);res.hidden=true;q.blur()}});
+document.addEventListener("pointerdown",e=>{if(!e.target.closest("#top"))res.hidden=true});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!card.hidden)closeCard()});
+ 
+initView();
+</script>
+</body>
+</html>
